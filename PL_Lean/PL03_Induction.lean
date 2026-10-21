@@ -293,7 +293,8 @@ This does not require induction.  Use `addN_succ_right` and `addN_succ_left`.
 -/
 
 theorem addN_self_succ (n : Nat) : addN (n + 1) (n + 1) = addN n n + 1 + 1 := by
-  sorry
+  rw [addN_succ_right]
+  rw [addN_succ_left]
 
 /-
 ### Exercise: Associativity of addN
@@ -307,7 +308,11 @@ Hint: induction on `k`.  In the successor case, unfold the additions with
 -/
 
 theorem addN_assoc (n m k : Nat) : addN (addN n m) k = addN n (addN m k) := by
-  sorry
+  induction k with
+  | zero => rfl
+  | succ k' ih =>
+    simp [addN_succ_right]
+    exact ih
 
 /-
 ### Exercise: Zero is left-absorbing for mulN
@@ -321,7 +326,12 @@ holds by computation.
 -/
 
 theorem mulN_zero_left (n : Nat) : mulN 0 n = 0 := by
-  sorry
+  induction n with
+  | zero => rfl
+  | succ n' ih =>
+    rw [mulN_succ]
+    rw [ih]
+    rfl
 
 
 /-
@@ -335,10 +345,15 @@ Hint: induct on `n`.  In the successor case, use `mulN_succ_right` and the induc
 hypothesis.  The remaining equality follows by computation.
 -/
 
-#check mulN_succ_right
+#check mulN_succ
 
 theorem mulN_one_left (n : Nat) : mulN 1 n = n := by
-  sorry
+  induction n with
+  | zero => rfl
+  | succ n' ih =>
+    simp [mulN_succ]
+    rw [ih]
+    rfl
 
 
 /-
@@ -373,8 +388,19 @@ Infoview.  The proof has three phases.
    `m'` and `n`.
 -/
 
+-- OBIETTIVO: rendere uguali i membri dell'equazione
 theorem mulN_succ_left (n m : Nat) : mulN (n + 1) m = addN (mulN n m) m := by
-  sorry
+  induction m with
+  | zero => rfl
+  | succ m' ih =>
+    rw [mulN_succ, mulN_succ]   -- Applicazione di mulN_succ a entrambi i membri dell'eq.
+    rw [ih]                     -- Sostituzione dell'ipotesi induttiva
+    rw [addN_assoc, addN_assoc] -- Associatività per entrambi i membri dell'eq.
+    rw [addN_succ_right]        -- Applicazione di addN_succ_right
+    rw [addN_comm m' n]         -- Applicazione commutatività
+    rw [addN_succ_right n m']   -- Applicazione addN_succ_right
+
+#check addN_comm
 
 
 /-
@@ -388,7 +414,14 @@ Hint: in the inductive case, exploit `mulN_succ_right` and `mulN_succ_left`.
 -/
 
 theorem mulN_comm (n m : Nat) : mulN n m = mulN m n := by
-  sorry
+  induction m with
+  | zero =>
+    rw [mulN_zero_left]
+    rfl
+  | succ m' ih =>
+    rw [mulN_succ]
+    rw [mulN_succ_left]
+    rw [ih]
 
 
 /-
@@ -411,7 +444,32 @@ and `mulN` can then unfold.  So the natural choice is induction on `c`.
 -/
 
 theorem mulN_addN_distrib_left (a b c : Nat) : mulN a (addN b c) = addN (mulN a b) (mulN a c) := by
-  sorry
+  induction c with
+  | zero =>
+      rw[addN_zero]
+      rw[mulN_zero]
+      rw[addN_zero]
+  | succ c' ih =>
+      rw[addN_succ_right]
+      rw[mulN_succ]
+      rw[mulN_succ]
+      rw[ih]
+      rw[addN_assoc]
+
+theorem mulN_addN_distrib_right (a b c : Nat) : mulN (addN a b) c = addN (mulN a c) (mulN b c) := by
+  induction c with
+  | zero =>
+      rw[mulN_zero]
+      rw[mulN_zero]
+      rw[mulN_zero]
+      rw[addN_zero]
+  | succ c' ih =>
+      simp[mulN_succ]
+      simp[ih]
+      simp[addN_assoc]
+      rw[addN_comm (mulN b c') (addN a b)]
+      rw[addN_assoc a b (mulN b c')]
+      rw[addN_comm b (mulN b c')]
 
 
 /-
@@ -427,7 +485,22 @@ definition usually leads to a clearer proof.
 
 theorem mulN_addN_distrib_left_by_first_arg (a b c : Nat) :
     mulN a (addN b c) = addN (mulN a b) (mulN a c) := by
-  sorry
+    induction a with
+    | zero =>
+      rw[mulN_zero_left]
+      rw[mulN_zero_left]
+      rw[mulN_zero_left]
+      rfl
+    | succ a' ih =>
+      rw[mulN_succ_left]
+      rw[mulN_succ_left]
+      rw[mulN_succ_left]
+      rw[addN_assoc]
+      rw[ih]
+      rw[addN_assoc]
+      rw[<-addN_assoc (mulN a' c) b c]
+      rw[addN_comm (mulN a' c)]
+      rw[addN_assoc]
 
 
 /-
@@ -441,7 +514,17 @@ Hint: in the inductive case, exploit `mulN_addN_distrib_left`.
 -/
 
 theorem mulN_assoc (n m k : Nat) : mulN (mulN n m) k = mulN n (mulN m k) := by
-  sorry
+  induction m with
+  | zero =>
+    simp[mulN_zero]
+    simp[mulN_zero_left]
+    simp[mulN_zero]
+  | succ m' ih =>
+    simp[mulN_succ]
+    simp[mulN_succ_left]
+    rw[mulN_addN_distrib_left]
+    rw[mulN_addN_distrib_right]
+    rw[ih]
 
 
 /-
@@ -454,8 +537,11 @@ Prove that `eqN` is reflexive.  Hint: proceed by induction on `a`, and use the
 -/
 
 theorem eqN_refl (a : Nat) : eqN a a = true := by
-  sorry
-
+  induction a with
+  | zero => rfl
+  | succ a' ih =>
+    simp[eqN]
+    exact ih
 
 /-
 ### Exercise: Reflexivity of leN
@@ -473,7 +559,11 @@ def leN : Nat → Nat → Bool
 -/
 
 theorem leN_refl (n : Nat) : leN n n = true := by
-  sorry
+  induction n with
+  | zero => rfl
+  | succ n' ih =>
+    simp[leN]
+    exact ih
 
 
 /-
@@ -490,7 +580,24 @@ In the `succ`, `succ` case, use the induction hypothesis.
 -/
 
 theorem leN_antisymm : ∀ n m, leN n m → leN m n → eqN n m := by
-  sorry
+  intro n
+  induction n with
+  | zero =>
+    intro m h1 h2
+    cases m with
+    | zero => rfl
+    | succ m' =>
+      simp [leN] at h2
+  | succ n' ih =>
+    intro m h1 h2
+    cases m with
+    | zero =>
+      simp [leN] at h1
+    | succ m' =>
+      simp [leN] at h1
+      simp [leN] at h2
+      simp [eqN]
+      exact ih m' h1 h2
 
 
 /-
@@ -509,7 +616,11 @@ def subN : Nat → Nat → Nat
 -/
 
 theorem subN_self (n : Nat) : subN n n = 0 := by
-  sorry
+  induction n with
+  | zero => rfl
+  | succ n' ih =>
+    simp[subN]
+    exact ih
 
 
 /-
@@ -522,7 +633,12 @@ Hint: `simp` knows that `!` is involutive.
 -/
 
 theorem isEven_succ (n: Nat) : isEven (n+1) = !(isEven n) := by
-  sorry
+  induction n with
+  | zero =>
+    simp[isEven]
+  | succ n' ih =>
+    rw[ih]
+    simp[isEven]
 
 
 /-
@@ -534,7 +650,14 @@ Hint: by induction on `n`.
 -/
 
 theorem isEven_doubleN (n: Nat) : isEven (doubleN n) := by
-  sorry
+  induction n with
+  | zero => rfl
+  | succ n' ih =>
+    simp[doubleN]
+    simp[addN_succ_left, addN_succ_right]
+    simp[isEven]
+    simp[doubleN] at ih
+    exact ih
 
 
 /-
@@ -547,7 +670,10 @@ hypothesis, `addN_succ_right`, and `addN_succ_left`.
 -/
 
 theorem doubleN_addN (n: Nat) : doubleN n = addN n n := by
-  sorry
+  induction n with
+  | zero => rfl
+  | succ n' ih =>
+    simp[doubleN]
 
 
 /-
@@ -569,7 +695,37 @@ After the case split, both sides compute to the same Boolean expression, so
 
 theorem evalBExp_dual (t : BExp) :
     evalBExp (dualBExp t) = !(evalBExp t) := by
-  sorry
+    induction t with
+  | btrue =>
+    simp[dualBExp]
+    simp[evalBExp]
+  | bfalse =>
+    simp[dualBExp]
+    simp[evalBExp]
+  | bifte t1 t2 t3 ih1 ih2 ih3 =>
+    cases h : evalBExp t1 with
+    | false =>
+      simp[dualBExp]
+      simp[evalBExp]
+      rw[h]
+      rw[ih1]
+      rw[ih2]
+      rw[ih3]
+      simp
+      intro h1
+      rw[h] at h1
+      cases h1
+    | true =>
+      simp[dualBExp]
+      simp[evalBExp]
+      rw[h]
+      rw[ih1]
+      rw[ih2]
+      rw[ih3]
+      simp
+      intro h1
+      rw[h] at h1
+      cases h1
 
 
 /-
@@ -609,15 +765,19 @@ inductive BExpConn where
 /-
 __Exercise (difficulty 1/4):__ Define the evaluation function for `BExpConn`.
 -/
-def evalBExpConn : BExpConn → Bool := sorry
+def evalBExpConn : BExpConn → Bool
+  | BExpConn.btrue => true
+  | BExpConn.bnot t => !(evalBExpConn t)
+  | BExpConn.band t1 t2 => (evalBExpConn t1) && (evalBExpConn t2)
+  | BExpConn.bor t1 t2 => (evalBExpConn t1) || (evalBExpConn t2)
 
 example :
     let ex0 := .band (.bor (.bnot .btrue) .btrue) .btrue
-    evalBExpConn ex0 = true := by sorry
+    evalBExpConn ex0 = true := by rfl
 
 example :
     let ex1 := .band (.bor (.bnot .btrue) .btrue) (.bnot .btrue)
-    evalBExpConn ex1 = false := by sorry
+    evalBExpConn ex1 = false := by rfl
 
 /-
 Every connective can be expressed with a conditional:
@@ -630,18 +790,22 @@ __Exercise (difficulty 2/4):__ Define a function `bexpconn_to_bexp` that transla
 `BExpConn` terms into `BExp` terms, following the intuition above.
 -/
 
-def bexpconn_to_bexp : BExpConn → BExp := sorry
+def bexpconn_to_bexp : BExpConn → BExp
+  | BExpConn.btrue => BExp.btrue
+  | BExpConn.bnot t => BExp.bifte (bexpconn_to_bexp t) BExp.bfalse BExp.btrue
+  | BExpConn.band t1 t2 => BExp.bifte (bexpconn_to_bexp t1) (bexpconn_to_bexp t2) BExp.bfalse
+  | BExpConn.bor t1 t2 => BExp.bifte (bexpconn_to_bexp t1) BExp.btrue (bexpconn_to_bexp t2)
 
 
 -- __Exercise (difficulty 1/4):__ Test the translation on the two examples above.
 
 example :
     let ex0 := .band (.bor (.bnot .btrue) .btrue) .btrue
-    evalBExpConn ex0 = evalBExp (bexpconn_to_bexp ex0) := by sorry
+    evalBExpConn ex0 = evalBExp (bexpconn_to_bexp ex0) := by rfl
 
 example :
     let ex1 := .band (.bor (.bnot .btrue) .btrue) (.bnot .btrue)
-    evalBExpConn ex1 = evalBExp (bexpconn_to_bexp ex1) := by sorry
+    evalBExpConn ex1 = evalBExp (bexpconn_to_bexp ex1) := by rfl
 
 /-
 __Exercise (difficulty 3/4):__ Prove that the translation preserves the meaning:
@@ -656,7 +820,32 @@ equation for `e`, allowing the surrounding conditional to compute.
 -/
 
 theorem bexpconn_equiv_bexp (t : BExpConn) : evalBExpConn t = evalBExp (bexpconn_to_bexp t) := by
-  sorry
+  induction t with
+  | btrue => rfl
+  | bnot t ih =>
+    simp[evalBExpConn]
+    rw[ih]
+    cases h : evalBExp (bexpconn_to_bexp t) with
+    | false =>
+      simp[bexpconn_to_bexp]
+      simp[evalBExp]
+      exact h
+    | true =>
+      simp[bexpconn_to_bexp]
+      simp[evalBExp]
+      exact h
+  | band t1 t2 ih1 ih2 =>
+    simp[evalBExpConn]
+    rw[ih1]
+    rw[ih2]
+    simp[bexpconn_to_bexp]
+    simp[evalBExp]
+  | bor t1 t2 ih1 ih2 =>
+    simp[evalBExpConn]
+    rw[ih1]
+    rw[ih2]
+    simp[bexpconn_to_bexp]
+    simp[evalBExp]
 
 end Exercises
 
