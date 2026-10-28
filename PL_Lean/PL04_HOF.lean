@@ -140,11 +140,11 @@ The parentheses around `Nat → Nat` in the last two types cannot be omitted.
 /-
 __Exercise__: Explain why the following commented commands would be rejected.  Do not
 uncomment both at once: read one expected error at a time.
+-/
 
 -- #check Nat.succ false
 -- #check addN Nat.succ 3
 -- #check addN 1 true
--/
 
 end Reading_function_types
 
@@ -190,8 +190,8 @@ example : ∀ (n : Nat), incr n = (fun n : Nat => n + 1) n := by
 
 /- __Exercise__: Resolve the sorry's. -/
 
-example : (fun f => f 5) (fun n => n + 1) = sorry := by sorry
-example : (fun f => f 5) (fun n => n * n) = sorry := by sorry
+example : (fun f => f 5) (fun n => n + 1) = 6 := by rfl
+example : (fun f => f 5) (fun n => n * n) = 25 := by rfl
 
 
 /-
@@ -248,18 +248,19 @@ This is why `isEven` cannot be supplied to `applyTwiceN`: `isEven` returns a
 
 
 /- __Exercise__: Resolve the sorry's -/
-example : applyTwiceN Nat.succ 5 = sorry := by sorry
-example : applyTwiceN doubleN 3 = sorry := by sorry
-example : applyTwiceN (fun n => n * n) 2 = sorry := by sorry
-example : applyTwiceN (applyTwiceN Nat.succ) 0 = sorry := by sorry
+example : applyTwiceN Nat.succ 5 = 7 := by rfl
+example : applyTwiceN doubleN 3 = 12 := by rfl
+example : applyTwiceN (fun n => n * n) 2 = 16 := by rfl
+example : applyTwiceN (applyTwiceN Nat.succ) 0 = 4 := by rfl
 
 
 /- __Exercise__: Define a function `applyThreeTimesN` satisfying the given tests. -/
 
-def applyThreeTimesN (f : Nat → Nat) (n : Nat) : Nat := sorry
+def applyThreeTimesN (f : Nat → Nat) (n : Nat) : Nat :=
+  f (f (f n))
 
-example : applyThreeTimesN Nat.succ 5 = 8 := by sorry
-example : applyThreeTimesN doubleN 1 = 8 := by sorry
+example : applyThreeTimesN Nat.succ 5 = 8 := by rfl
+example : applyThreeTimesN doubleN 1 = 8 := by rfl
 
 end Functions_as_arguments
 
@@ -295,8 +296,8 @@ def chooseN (s : Bool) (f g : Nat → Nat) : Nat → Nat :=
 
 /- __Exercise__: Resolve the sorry's. -/
 
-example : chooseN true  doubleN Nat.succ 4 = sorry := by sorry
-example : chooseN false doubleN Nat.succ 4 = sorry := by sorry
+example : chooseN true  doubleN Nat.succ 4 = 8 := by rfl
+example : chooseN false doubleN Nat.succ 4 = 5 := by rfl
 
 /-
 Note that `chooseN` does not run `f` or `g`: it just chooses one of the two functions.
@@ -310,10 +311,10 @@ function `h` such that `h(n) = f(n) + g(n)`, for all `n : Nat`.
 -/
 
 def sumFun : (Nat → Nat) → (Nat → Nat) → (Nat → Nat) :=
-  sorry
+  fun f g x => (f x) + (g x)
 
-example : sumFun (fun n => n+1) (fun n => n+n) 3 = 10 := by sorry
-example : sumFun (fun n => n+1) (fun n => n+n) 5 = 16 := by sorry
+example : sumFun (fun n => n+1) (fun n => n+n) 3 = 10 := by rfl
+example : sumFun (fun n => n+1) (fun n => n+n) 5 = 16 := by rfl
 
 end Functions_as_return_values
 
@@ -338,8 +339,8 @@ def composeN (f g : Nat → Nat) : Nat → Nat :=
 
 /- __Exercise__: resolve the sorry's -/
 
-example : composeN Nat.succ doubleN 3 = sorry := by sorry
-example : composeN doubleN Nat.succ 3 = sorry := by sorry
+example : composeN Nat.succ doubleN 3 = 7 := by rfl
+example : composeN doubleN Nat.succ 3 = 8 := by rfl
 
 /-
 After solving the previous exercise, you should realise that function composition is
@@ -356,8 +357,8 @@ def applyThenTest (p : Nat → Bool) (f : Nat → Nat) : Nat → Bool :=
 
 /- __Exercise__: resolve the sorry's -/
 
-example : applyThenTest isEven Nat.succ 3 = sorry := by sorry
-example : applyThenTest isEven Nat.succ 4 = sorry := by sorry
+example : applyThenTest isEven Nat.succ 3 = true := by rfl
+example : applyThenTest isEven Nat.succ 4 = false := by rfl
 
 /-
 Lean has a built-in composition operator `∘`, entered as `\comp`:
@@ -388,7 +389,8 @@ __Exercise__: prove that `idN` is also the right identity of composition.
 -/
 
 theorem composeN_identity_right (f : Nat → Nat) : composeN f idN = f := by
-  sorry
+  funext n
+  rfl
 
 
 /-
@@ -397,7 +399,8 @@ __Exercise__ Prove that function composition is associative.
 
 theorem composeN_assoc (f g h : Nat → Nat) :
     composeN (composeN f g) h = composeN f (composeN g h) := by
-  sorry
+  funext n
+  rfl
 
 end Composition
 
@@ -448,7 +451,8 @@ Hint: Use `funext` and `simp`.
 -/
 
 theorem deposit_zero : deposit 0 = idN := by
-  sorry
+  funext n
+  rfl
 
 /-
 __Exercise__: Prove that two consecutive deposits can be combined into one.
@@ -457,7 +461,11 @@ Hint: Use `funext` and `simp`.
 -/
 
 theorem deposit_additivity (a b : Nat) : composeN (deposit a) (deposit b) = deposit (b + a) := by
-  sorry
+  funext n
+  simp[composeN]
+  simp[deposit]
+  -- Teorema dell'associatività del tipo Nat (uguale a addN_assoc)
+  rw[Nat.add_assoc]
 
 /-
 __Exercise__: Prove that the effect of a deposit can be reverted by a subsequent withdraw.
@@ -466,7 +474,14 @@ Hint: Use `exists` tactic to provide a witness for the existentially quantified 
 -/
 
 theorem deposit_reversibility : ∀ a : Nat, ∃ b : Nat, composeN (withdraw b) (deposit a) = idN := by
-  sorry
+  intro a
+  exists a
+  funext n
+  simp[composeN]
+  simp[withdraw]
+  simp[deposit]
+  rfl
+
 
 end State_transformers
 
@@ -503,9 +518,9 @@ example : iterateN Nat.succ 5 0 = 5 := by rfl
 
 /- __Exercise__ Resolve the sorry's -/
 
-example : iterateN Nat.succ 3 12 = sorry := by sorry
-example : iterateN (fun n => n + 3) 4 0 = sorry := by sorry
-example : iterateN (addN 2) 4 1 = sorry := by sorry
+example : iterateN Nat.succ 3 12 = 15 := by rfl
+example : iterateN (fun n => n + 3) 4 0 = 12 := by rfl
+example : iterateN (addN 2) 4 1 = 9 := by rfl
 
 /- We can easily prove that `applyTwice` is a special case of `iterateN` when `k=2` -/
 theorem applyTwiceN_eq_iterateN2 (f : Nat → Nat) :
@@ -514,12 +529,13 @@ theorem applyTwiceN_eq_iterateN2 (f : Nat → Nat) :
 
 
 /- __Exercise__ Define the function `pow2` (exponentiation in base 2) using `iterateN` (no recursion!). -/
-def pow2 (n : Nat) : Nat := sorry
+def pow2 (n : Nat) : Nat :=
+  iterateN (mulN 2) n 1
 
-example : pow2 0 = 1 := by sorry
-example : pow2 1 = 2 := by sorry
-example : pow2 2 = 4 := by sorry
-example : pow2 3 = 8 := by sorry
+example : pow2 0 = 1 := by rfl
+example : pow2 1 = 2 := by rfl
+example : pow2 2 = 4 := by rfl
+example : pow2 3 = 8 := by rfl
 
 
 /-
@@ -573,7 +589,12 @@ Hint: induction on `k`
 
 theorem iterateN_succ_eq_addN (k n : Nat) :
     iterateN Nat.succ k n = addN n k := by
-  sorry
+  induction k with
+  | zero => rfl
+  | succ k' ih =>
+    rw[iterateN]
+    rw[addN]
+    rw[ih]
 
 /-
 __Exercise__ Exploit `iterateN_succ_eq_addN` as an auxiliary lemma (using the `have` tactic) to prove the following.
@@ -581,8 +602,16 @@ __Exercise__ Exploit `iterateN_succ_eq_addN` as an auxiliary lemma (using the `h
 
 theorem iterateN_succ_from_zero (k : Nat) :
     iterateN Nat.succ k 0 = k := by
-  sorry
+  rw[iterateN_succ_eq_addN]
+  simp[addN_comm]
+  simp[addN_zero]
 
+theorem iterateN_succ_from_zero2 (k : Nat) :
+    iterateN Nat.succ k 0 = k := by
+  have h : iterateN Nat.succ k 0 = addN 0 k := by
+    apply iterateN_succ_eq_addN k 0
+  rw[h]
+  exact zero_addN k
 
 end Iteration
 
@@ -610,11 +639,11 @@ def sumBelow (f : Nat → Nat) (n : Nat) : Nat :=
 
 /- __Exercise__ Resolve the sorry's. -/
 
-example : sumBelow (λ _ => 1) 7 = sorry         := by sorry
-example : sumBelow (λ n => n) 5 = sorry         := by sorry
-example : sumBelow (λ n => n) 6 = sorry         := by sorry
-example : sumBelow (λ n => 2 * n - 1) 6 = sorry := by sorry
-example : sumBelow (λ n => 2 * n - 1) 7 = sorry := by sorry
+example : sumBelow (λ _ => 1) 7 = 7             := by rfl
+example : sumBelow (λ n => n) 5 = 10            := by rfl
+example : sumBelow (λ n => n) 6 = 15            := by rfl
+example : sumBelow (λ n => 2 * n - 1) 6 = 25    := by rfl
+example : sumBelow (λ n => 2 * n - 1) 7 = 36    := by rfl
 
 /-
 __Exercise (difficulty: 1/4)__ Prove that summing the constant `1` counts the elements in the range.
@@ -622,7 +651,11 @@ __Exercise (difficulty: 1/4)__ Prove that summing the constant `1` counts the el
 
 theorem sumBelow_one (n : Nat) :
     sumBelow (fun _ => 1) n = n := by
-  sorry
+  induction n with
+  | zero => rfl
+  | succ n' ih =>
+    simp[sumBelow]
+    exact ih
 
 /-
 __Exercise__ (**difficulty: 1/4**): define `sumOfSquares` by supplying an
@@ -630,11 +663,11 @@ anonymous squaring function to `sumBelow`.  Do not write another recursion.
 -/
 
 def sumOfSquares (n : Nat) : Nat :=
-  sorry
+  sumBelow (fun x => x*x) n
 
-example : sumOfSquares 0 = 0  := by sorry
-example : sumOfSquares 4 = 14 := by sorry
-example : sumOfSquares 6 = 55 := by sorry
+example : sumOfSquares 0 = 0  := by rfl
+example : sumOfSquares 4 = 14 := by rfl
+example : sumOfSquares 6 = 55 := by rfl
 
 
 /-
@@ -656,11 +689,13 @@ __Exercise (difficulty: 1/4)__ Define the function `anyBelow`, that returns `tru
 whenever there **exists** some element in the range `0,...,n-1` that satisfies `p`.
 -/
 def anyBelow (p : Nat → Bool) (n : Nat) : Bool :=
-  sorry
+  match n with
+  | 0 => p 0
+  | n'+1 => p n' || anyBelow p n'
 
-example : anyBelow (fun i => eqN i 7) 10  = true := by sorry
-example : anyBelow (fun i => eqN i 11) 10 = false := by sorry
-example : anyBelow (fun i => eqN i 10) 10 = false := by sorry
+example : anyBelow (fun i => eqN i 7) 10  = true := by rfl
+example : anyBelow (fun i => eqN i 11) 10 = false := by rfl
+example : anyBelow (fun i => eqN i 10) 10 = false := by rfl
 
 /-
 __Exercise (difficulty: 1/4)__ Define the function `allBelow`, that returns `true`
@@ -668,11 +703,13 @@ whenever **all** the elements in the range `0,...,n-1` satisfy `p`.
 -/
 
 def allBelow (p : Nat → Bool) (n : Nat) : Bool :=
-  sorry
+  match n with
+  | 0 => p 0
+  | n'+1 => p n' && allBelow p n'
 
-example : allBelow (fun i => eqN (addN i 0) i) 50 = true := by sorry
-example : allBelow (fun i => eqN (doubleN i) i) 10 = false := by sorry
-example : allBelow (fun i => ltN i 10) 10 = true := by sorry
+example : allBelow (fun i => eqN (addN i 0) i) 50 = true := by rfl
+example : allBelow (fun i => eqN (doubleN i) i) 10 = false := by rfl
+example : allBelow (fun i => ltN i 10) 10 = true := by rfl
 
 
 end Bounded_experiments
@@ -695,24 +732,50 @@ __Exercise (difficulty: 1/4)__ Define `repeatAdd k a`, which returns a function 
 -/
 
 def repeatAdd (k a : Nat) : Nat → Nat :=
-  sorry
+  match k with
+  | 0 => fun y => y
+  | k'+1 => fun y => a + repeatAdd k' a y
 
-example : repeatAdd 3 5 10 = 25 := by sorry
-example : repeatAdd 0 5 10 = 10 := by sorry
+
+example : repeatAdd 3 5 10 = 25 := by rfl
+example : repeatAdd 0 5 10 = 10 := by rfl
 
 /-
 __Exercise (difficulty: 1/4)__ Prove theorem `repeatAdd_succ_left`. Hint: you do not need induction.
 -/
 
+theorem addN_eq_add (a b : Nat) : a+b = (addN a b) := by
+  induction a with
+  | zero =>
+    simp[addN_comm, addN_zero]
+  | succ a' ih =>
+    simp[addN_succ_left]
+    simp[<-ih]
+    simp[Nat.add_comm]
+    rfl
+
+
 theorem repeatAdd_succ_left (a b c : Nat) : repeatAdd (a+1) b c = addN (repeatAdd a b c) b := by
-  sorry
+  simp[repeatAdd]
+  simp[addN_comm]
+  rw[addN_eq_add]
+
 
 /-
 __Exercise (difficulty: 2/4)__ Prove the following equivalence between `repeatAdd` and `mulN`.
 -/
 
 theorem repeatAdd_eq_mulN (a b : Nat) : repeatAdd b a 0 = mulN a b := by
-  sorry
+  induction b with
+  | zero =>
+    simp[repeatAdd]
+    simp[mulN]
+  | succ b' ih =>
+    simp[repeatAdd]
+    simp[mulN]
+    rw[ih]
+    simp[addN_eq_add]
+    simp[addN_comm]
 
 end Exercises_repeated_additions
 
@@ -732,7 +795,8 @@ it remains a witness below `n+1`.
 
 theorem anyBelow_grows (p : Nat → Bool) (n : Nat)
     (h : anyBelow p n = true) : anyBelow p (n + 1) = true := by
-  sorry
+  simp[anyBelow]
+  simp[h]
 
 /-
 __Exercise (difficulty: 2/4)__ Prove that the predicate which always returns `true`
@@ -741,7 +805,13 @@ passes on every finite range.
 
 theorem allBelow_true (n : Nat) :
     allBelow (fun _ => true) n = true := by
-  sorry
+  induction n with
+  | zero =>
+    rfl
+  | succ n' ih =>
+    simp[allBelow]
+    rw[ih]
+
 
 /-
 __Exercise (difficulty: 2/4)__ Prove that checking that all values satisfy `p`
@@ -752,7 +822,14 @@ Hint: by induction on `n`.
 
 theorem allBelow_eq_not_anyBelow_not (p : Nat → Bool) (n : Nat) :
     allBelow p n = !(anyBelow (fun i => !(p i)) n) := by
-  sorry
+  induction n with
+  | zero =>
+    simp[allBelow]
+    simp[anyBelow]
+  | succ n' ih =>
+    simp[allBelow]
+    simp[anyBelow]
+    rw[ih]
 
 /-
 __Exercise (difficulty: 2/4)__ Prove that checking that if `p` is true for all values,
@@ -766,7 +843,15 @@ theorem allBelow_of_forall
     (n : Nat)
     (h : ∀ i : Nat, p i = true) :
     allBelow p n := by
-  sorry
+  induction n with
+  | zero =>
+    simp[allBelow]
+    rw[h]
+  | succ n' ih =>
+    simp[allBelow]
+    rw[h]
+    rw[ih]
+    simp
 
 
 /-
@@ -778,10 +863,20 @@ Hint: since `op` takes two arguments, you will need two uses of `allBelow`.
 -/
 
 def checkCommutativeBelow (op : Nat → Nat → Nat) (n : Nat) : Bool :=
-  sorry
+  match n with
+  | 0 => op 0 0 = op 0 0
+  | n'+1 => (op (n'+1) (n') = op (n') (n'+1)) && (checkCommutativeBelow op n')
 
-example : checkCommutativeBelow addN 20 = true      := by sorry
-example : checkCommutativeBelow Nat.sub 20 = false  := by sorry
+def checkCommutativeBelow2 (op : Nat → Nat → Nat) (n : Nat) : Bool :=
+  match n with
+  | 0 => allBelow (fun x => op x 0 = op 0 x) 0
+  | n'+1 => allBelow (fun x => op x n = op n x) n'
+
+example : checkCommutativeBelow addN 20 = true      := by rfl
+example : checkCommutativeBelow Nat.sub 20 = false  := by rfl
+
+example : checkCommutativeBelow2 addN 20 = true      := by rfl
+example : checkCommutativeBelow2 Nat.sub 20 = false  := by rfl
 
 /-
 __Exercise (difficulty: 2/4)__ Prove that if an operator is commutative, then
@@ -789,14 +884,74 @@ __Exercise (difficulty: 2/4)__ Prove that if an operator is commutative, then
 
 Hint: apply `allBelow_of_forall`.
 -/
+
+-- Scrivo un teorema che dimostra l'equivalenza tra eqN e "="
+-- PRECISAZIONE: senza quantificatore universale o generalizing, effettuando induzione su a
+-- si fissa anche il valore di b e questo non consente di avere un'ipotesi induttiva abbastanza
+-- generale per risolvere il goal finale (con a' e b').
+
+-- Soluzione 1: quantificatore universale su b
+theorem eqN_eq (a : Nat) : ∀ b : Nat, eqN a b = (a = b) := by
+  induction a with
+  | zero =>
+    intro b
+    cases b with
+    | zero =>
+      simp[eqN]
+    | succ b' =>
+      simp[eqN]
+  | succ a' ih =>
+    intro b
+    cases b with
+    | zero =>
+      simp [eqN]
+    | succ b' =>
+      simp [eqN]
+      simp at ih
+      exact ih b'
+
+-- Soluzione 2: generalizing su b
+theorem eqN_eq2 (a b : Nat) : eqN a b = (a = b) := by
+  induction a generalizing b with
+  | zero =>
+    cases b with
+    | zero =>
+      simp[eqN]
+    | succ b' =>
+      simp[eqN]
+  | succ a' ih =>
+    cases b with
+    | zero =>
+      simp [eqN]
+    | succ b' =>
+      simp [eqN]
+      simp at ih
+      exact ih b'
+
+
 example (op : Nat → Nat → Nat) (n : Nat) :
-    (∀ a b : Nat, eqN (op a b) (op b a) = true) → checkCommutativeBelow op n = true := by
-  sorry
+    (∀ a b : Nat, eqN (op a b) (op b a) = true) → checkCommutativeBelow2 op n = true := by
+  intro h
+  induction n with
+  | zero =>
+    simp[checkCommutativeBelow2]
+    simp[allBelow]
+  | succ n' ih =>
+    simp[checkCommutativeBelow2]
+    apply allBelow_of_forall
+    simp
+    intro i
+    -- Genero una versione specifica di "h" con parametri i e (n'+1)
+    have h2 := h i (n'+1)
+    simp[eqN_eq] at h2
+    exact h2
+
 
 end Exercises_bounded_search
 
 
 
+-- TO DO:
 section Bank
 
 /-
@@ -811,7 +966,7 @@ def Bank := Nat → Nat   -- balance of every account (represented as natural nu
 def emptyBank : Bank := fun _ => 0
 
 def depositBank (a : Nat) (n : Nat) (b : Bank) : Bank :=
-  fun x  => if x = a then b a + n else b x
+  fun x  => if x = a then (b a)+n else b x
 
 example : depositBank 3 20 emptyBank 3 = 20 := by rfl
 example : depositBank 3 20 emptyBank 4 = 0  := by rfl
@@ -821,7 +976,7 @@ its balance is increased exactly by `n`. -/
 
 theorem depositBank_same (a : Nat) (n : Nat) (b : Bank) :
     depositBank a n b a = b a + n := by
-  sorry
+  simp[depositBank]
 
 /- __Exercise (difficulty: 1/4)__ Prove that if a user deposits `n`, then
 the balance of any other account is preserved. -/
@@ -830,16 +985,20 @@ theorem depositBank_other
     (a x : Nat) (n : Nat) (b : Bank)
     (h : x ≠ a) :
     depositBank a n b x = b x := by
-  sorry
+  simp[depositBank]
+  intro h2
+  simp[h] at h2
 
 /- __Exercise (difficulty: 1/4)__ Define an operation to withdraw from the bank.
 If the account does not contain sufficient funds, then the operation has no effect. -/
 
 def withdrawBank (a : Nat) (n : Nat) (b : Bank) : Bank :=
-  sorry
+  fun x  => if (x = a) && (n <= (b a))
+  then (b a)-n
+  else b x
 
-example : withdrawBank 3 20  (depositBank 3 100 emptyBank) 3 = 80  := by sorry
-example : withdrawBank 3 120 (depositBank 3 100 emptyBank) 3 = 100 := by sorry
+example : withdrawBank 3 20  (depositBank 3 100 emptyBank) 3 = 80  := by rfl
+example : withdrawBank 3 120 (depositBank 3 100 emptyBank) 3 = 100 := by rfl
 
 /- __Exercise (difficulty: 2/4)__ Prove that two deposits on the same account have the
 same effect of a single deposit of the sum of the amounts.
@@ -862,8 +1021,20 @@ creates two goals:
 This is useful when the definition being studied contains the same test.
 -/
 
-theorem depositBank_additivity (a n1 n2 : Nat) : (depositBank a n2) ∘ (depositBank a n1) = depositBank a (n1 + n2) := by
-  sorry
+theorem depositBank_additivity (a n1 n2 : Nat) :
+    (depositBank a n2) ∘ (depositBank a n1) = depositBank a (n1 + n2) := by
+  funext b
+  funext c
+  rw[Function.comp_apply]
+  by_cases h : c=a
+  -- CASO c=a
+  simp[depositBank]
+  simp[h]
+  exact Nat.add_assoc (b a) n1 n2
+  -- CASO c!=a
+  simp[depositBank]
+  simp[h]
+
 
 
 /- __Exercise (difficulty: 4/4)__ Prove that two withdrawals on the same account have the
@@ -882,8 +1053,22 @@ To close the first case, theorem `Nat.sub_sub` may be helpful.
 
 theorem withdrawBank_additivity (a n1 n2 : Nat) (b : Bank) (h : b a ≥ n1 + n2) :
   (withdrawBank a n2) ((withdrawBank a n1) b) = withdrawBank a (n1 + n2) b := by
-  sorry
-
+  -- Dimostrazione lemmi iniziali
+  have lemma1 : b a >= n1 := by
+    omega
+  have lemma2 : b a - n1 >= n2 := by
+    omega
+  -- Introduzione variabile amount
+  funext amount
+  simp[withdrawBank]
+  simp[lemma1]
+  simp[lemma2]
+  simp[h]
+  simp[Nat.sub_sub]
+  -- Split nei casi pos/neg amount=a
+  by_cases h2 : amount=a
+  simp[h2]
+  simp[h2]
 end Bank
 
 
@@ -900,7 +1085,15 @@ The initial value at index zero contributes zero because subtraction on `Nat` st
 -/
 
 theorem sumOdd_closed (n : Nat) : sumBelow (λ n => 2 * n - 1) (n+1) = n * n := by
-  sorry
+  induction n with
+  | zero =>
+    rfl
+  | succ n' ih =>
+    simp[sumBelow]
+    simp[Nat.add_one_mul_add_one]
+    simp[<-ih]
+    simp[sumBelow]
+    omega
 
 
 /-
@@ -908,7 +1101,15 @@ __Exercise (difficulty: 3/4)__ Prove the following closed-form formula for the s
 -/
 
 theorem sumId_closed (n : Nat) : 2 * (sumBelow (λ n => n)) (n+1) = (n+1) * n := by
-  sorry
+  induction n with
+  | zero =>
+    rfl
+  | succ n' ih =>
+    simp[Nat.add_one_mul_add_one]
+    rw[<-ih]
+    simp[sumBelow]
+    omega
+
 
 end Closed_form_summations
 

@@ -650,6 +650,7 @@ under the name `Nat.le_succ_of_le`.
 #print Nat.le_succ_of_le
 
 
+
 /-
 ### Exercise: Interplay of leN and successor: left increment
 
@@ -665,7 +666,18 @@ Hint: induction on `b` generalizing `a`. In the inductive case,
 do case-analysis on `a`.
 -/
 theorem leN_succ_left (a b : Nat) : leN (a + 1) b = true → leN a b = true := by
-  sorry
+  induction b generalizing a with
+  | zero =>
+    simp[leN]
+  | succ b' ih =>
+    intro h
+    cases a with
+    | zero =>
+      simp[leN]
+    | succ a' =>
+      simp[leN]
+      simp[leN] at h
+      exact ih a' h
 
 /-
 ### Exercise: Antisymmetricity of leN
@@ -684,6 +696,7 @@ immediately as recommended, because the proposition has `m` universally
 quantified.
 -/
 
+-- Soluzione 1: quantificatore universale
 theorem leN_antisymm : ∀ n m, leN n m → leN m n → eqN n m := by
   intro n
   induction n with
@@ -703,6 +716,25 @@ theorem leN_antisymm : ∀ n m, leN n m → leN m n → eqN n m := by
       simp [leN] at h2
       simp [eqN]
       exact ih m' h1 h2
+
+-- Soluzione 2: induction generalizing
+theorem leN_antisymm2 (n m : Nat) : leN n m → leN m n → eqN n m := by
+  induction n generalizing m with
+  | zero =>
+    simp[leN]
+    cases m with
+    | zero =>
+      simp[leN, eqN]
+    | succ m' =>
+      simp[leN]
+  | succ n' ih =>
+    cases m with
+    | zero =>
+      simp [leN]
+    | succ m' =>
+      simp[leN]
+      simp[eqN]
+      exact ih m'
 
 
 /-
@@ -957,6 +989,9 @@ end Exercises
 
 section Binary_numbers
 
+
+
+-- TO DO:
 /-
 ## Binary numbers (optional extended exercise)
 
