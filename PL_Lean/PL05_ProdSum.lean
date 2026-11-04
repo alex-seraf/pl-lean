@@ -73,11 +73,11 @@ Products can also be **nested**, and functions may return pairs.
 /- __Exercise (difficulty: 1/4)__ Construct values of the given types.
 Notice where the parentheses occur. -/
 
-example : Nat × Nat           := sorry
-example : (Nat × Bool) × Nat  := sorry
-example : Nat × (Bool × Nat)  := sorry
-example : Nat → (Nat × Nat)   := sorry
-example : Nat → (Nat × Bool)  := sorry
+example : Nat × Nat           := (1, 2)
+example : (Nat × Bool) × Nat  := ((1, true), 5)
+example : Nat × (Bool × Nat)  := (5, (false, 0))
+example : Nat → (Nat × Nat)   := fun (x:Nat) => (x, x)
+example : Nat → (Nat × Bool)  := fun (x:Nat) => (x, false)
 
 /-
 Parentheses matter. In general,
@@ -122,13 +122,13 @@ example : swapNatBool (0, false) = (false, 0) := by rfl
 /- __Exercise (difficulty: 1/4)__ Define the following functions using projections. -/
 
 def sumComponents (p : Nat × Nat) : Nat :=
-  sorry
+  p.1 + p.2
 
 def keepFirstAndDoubleSecond (p : Nat × Nat) : Nat × Nat :=
-  sorry
+  (p.1, 2*p.2)
 
-example : sumComponents (3, 4) = 7                  := by sorry
-example : keepFirstAndDoubleSecond (3, 4) = (3, 8)  := by sorry
+example : sumComponents (3, 4) = 7                  := by rfl
+example : keepFirstAndDoubleSecond (3, 4) = (3, 8)  := by rfl
 
 end Projections
 
@@ -157,23 +157,24 @@ example (p : Nat × Bool): swapNatBool₂ p  = swapNatBool p := by rfl
 /- __Exercise (difficulty: 1/4)__ Define the following functions using pattern matching. -/
 
 def addPair : Nat × Nat → Nat
-  := sorry
+  | (a, b) => a+b
 
 def mulPair : Nat × Nat → Nat
-  := sorry
+  | (a, b) => a*b
 
-example : addPair (3, 4) = 7  := by sorry
-example : mulPair (3, 4) = 12 := by sorry
+example : addPair (3, 4) = 7  := by rfl
+example : mulPair (3, 4) = 12 := by rfl
 
 /- __Exercise (difficulty: 1/4)__ The Boolean component chooses which number to return. -/
 
 def chooseFromPair : (Nat × Nat) × Bool → Nat
-  := sorry
+  | ((n1, n2), b) => if b then n1 else n2
 
-example : chooseFromPair ((10, 20), true)  = 10 := by sorry
-example : chooseFromPair ((10, 20), false) = 20 := by sorry
+example : chooseFromPair ((10, 20), true)  = 10 := by rfl
+example : chooseFromPair ((10, 20), false) = 20 := by rfl
 
 end Pattern_matching
+
 
 
 section Tuples
@@ -200,12 +201,13 @@ Then, prove that applying `rev4` twice is the identity function.
 -/
 
 def rev4: Nat × Nat × Nat × Nat → Nat × Nat × Nat × Nat
-  := sorry
+  | (a, b, c, d) => (d, c, b, a)
 
-example : rev4 (1,2,3,4) = (4,3,2,1) := by sorry
+example : rev4 (1,2,3,4) = (4,3,2,1) := by rfl
 
 theorem rev4_rev4_equiv_id4 : ∀ t : Nat × Nat × Nat × Nat, rev4 (rev4 t) = t := by
-  sorry
+  intro n
+  simp[rev4]
 
 /-
 We can use pattern matching also on nested pairs. As usual, the wildcard `_` can match everything.
@@ -224,12 +226,14 @@ example : addTwoPairs ((1, 2), (3, 4)) = 10 := by rfl
 -/
 
 def minOrMax : (Nat × Nat) × Bool → Nat
-  := sorry
+  | ((n, m), b) => match b with
+    | true => if n>m then n else m
+    | false => if n<m then n else m
 
-example : minOrMax ((1, 2), false) = 1 := by sorry
-example : minOrMax ((3, 2), false) = 2 := by sorry
-example : minOrMax ((1, 3), true)  = 3 := by sorry
-example : minOrMax ((4, 2), true)  = 4 := by sorry
+example : minOrMax ((1, 2), false) = 1 := by rfl
+example : minOrMax ((3, 2), false) = 2 := by rfl
+example : minOrMax ((1, 3), true)  = 3 := by rfl
+example : minOrMax ((4, 2), true)  = 4 := by rfl
 
 end Tuples
 
@@ -247,18 +251,20 @@ applies two computations to the same input and returns both results.
 def bothResultsN (f g : Nat → Nat) (n : Nat) : Nat × Nat :=
   (f n, g n)
 
-example : bothResultsN Nat.succ (Nat.pred) 2 = (1,3) := sorry
-example : bothResultsN Nat.succ (fun n => n+n) 5 = sorry := sorry
+example : bothResultsN Nat.succ (Nat.pred) 2 = (3, 1) := by rfl
+example : bothResultsN Nat.succ (fun n => n+n) 5 = (6, 10) := by rfl
 
 /- __Exercise (difficulty: 1/4)__ Define a function `minMax` that takes as input two numbers,
 and returns a pair where the left element is the smaller input and right element if the the larger input. -/
 
 def minMax (a b : Nat) : Nat × Nat :=
-  sorry
+  if a<b
+  then (a, b)
+  else (b, a)
 
-example : minMax 3 8 = (3, 8) := by sorry
-example : minMax 8 3 = (3, 8) := by sorry
-example : minMax 4 4 = (4, 4) := by sorry
+example : minMax 3 8 = (3, 8) := by rfl
+example : minMax 8 3 = (3, 8) := by rfl
+example : minMax 4 4 = (4, 4) := by rfl
 
 end Functions_returning_pairs
 
@@ -284,13 +290,14 @@ def emptyTuple : Unit := ()
 /- __Exercise (difficulty: 1/4)__ Prove that type `Unit` is inhabited. -/
 
 theorem unit_inhabited : ∃ x : Unit, x = () := by
-  sorry
+  simp
 
 /- __Exercise (difficulty: 1/4)__ Prove that two elements of type `Unit` must be identical.
 Hint: by case analysis. -/
 
 theorem unit_unique (x y : Unit) : x = y := by
-  sorry
+  cases x with
+  | unit => simp
 
 /-
 __Exercise (difficulty: 1/4)__ Show that pairing a number with `()` adds no information.
@@ -301,16 +308,18 @@ Split the proof in 3 parts:
 -/
 
 def removeUnitRight (p : Nat × Unit) : Nat :=
-  sorry
+  p.1
 
 def addUnitRight (n : Nat) : Nat × Unit :=
-  sorry
+  (n, ())
 
 theorem remove_comp_add_id (n : Nat): removeUnitRight (addUnitRight n) = n := by
-  sorry
+  simp[removeUnitRight]
+  simp[addUnitRight]
 
 theorem add_comp_remove_id (p : Nat × Unit): addUnitRight (removeUnitRight p) = p := by
-  sorry
+  simp[removeUnitRight]
+  simp[addUnitRight]
 
 end Unit_type
 
@@ -447,10 +456,12 @@ def swapBoolNat : Bool × Nat → Nat × Bool
 /- __Exercise (difficulty: 1/4)__ Prove both round trips. -/
 
 theorem swapBoolNat_comp_swapNatBool_id (p : Nat × Bool) : swapBoolNat (swapNatBool p) = p := by
-  sorry
+  simp[swapBoolNat]
+  simp[swapNatBool]
 
 theorem swapNatBool_comp_swapBoolNat_id (p : Bool × Nat) : swapNatBool (swapBoolNat p) = p := by
-  sorry
+  simp[swapBoolNat]
+  simp[swapNatBool]
 
 end Type_isomorphisms
 
@@ -510,10 +521,15 @@ example : uncurryN (fun (n m : Nat) => n + m)          (3, 4) = 7 := by rfl
 /- __Exercise (difficulty: 1/4)__ Prove the type isomorphism. -/
 
 theorem curryN_uncurryN (f : Nat → Nat → Nat) : curryN (uncurryN f) = f := by
-  sorry
+  funext a
+  funext b
+  simp[curryN]
+  simp[uncurryN]
 
 theorem uncurryN_curryN (f : Nat × Nat → Nat) : uncurryN (curryN f) = f := by
-  sorry
+  funext a
+  simp[uncurryN]
+  simp[curryN]
 
 end Currying
 
@@ -688,21 +704,24 @@ example : natOrBoolToNat (.inr false) = 0 := by rfl
 /- __Exercise (difficulty: 1/4)__ `isNatAlternative` tests which side was chosen. -/
 
 def isNatAlternative : Nat ⊕ Bool → Bool
-  := sorry
+  | .inl _ => true
+  | .inr _ => false
 
-example : isNatAlternative (.inl 3) = true      := by sorry
-example : isNatAlternative (.inr false) = false := by sorry
+example : isNatAlternative (.inl 3) = true      := by rfl
+example : isNatAlternative (.inr false) = false := by rfl
 
 
 /- __Exercise (difficulty: 1/4)__ Return the successor of the payload or its negation. -/
 
 def succOrNot : Nat ⊕ Bool → Nat ⊕ Bool
-  := sorry
+  | .inl n => .inl (n+1)
+  | .inr b => .inr (!b)
 
-example : succOrNot (.inl 5) = .inl 6         := by sorry
-example : succOrNot (.inr true) = .inr false  := by sorry
+example : succOrNot (.inl 5) = .inl 6         := by rfl
+example : succOrNot (.inr true) = .inr false  := by rfl
 
 end Pattern_matching
+
 
 
 section Proofs_about_sums
@@ -751,7 +770,7 @@ For a sum, the pattern
 
     n | b
 
-describes its two alternatives. The tactic creates two goale:
+describes its two alternatives. The tactic creates two goals:
 one goal with `n : Nat`, and another goal with `b : Bool`.
 -/
 
@@ -790,6 +809,7 @@ example (p : Nat × (Bool ⊕ Nat)) : Nat × Bool := by
 end Proofs_about_sums
 
 
+
 section Type_isomorphisms
 
 /-
@@ -818,11 +838,24 @@ Use the `cases` tactic to create two goals.
 
 theorem swapBoolNatSum_comp_swapNatBoolSum_id (s : Nat ⊕ Bool) :
     swapBoolNatSum (swapNatBoolSum s) = s := by
-  sorry
+  cases s with
+  | inl s' =>
+    simp[swapNatBoolSum]
+    simp[swapBoolNatSum]
+  | inr s' =>
+    simp[swapNatBoolSum]
+    simp[swapBoolNatSum]
+
 
 theorem swapNatBoolSum_comp_swapBoolNatSum_id (s : Bool ⊕ Nat) :
     swapNatBoolSum (swapBoolNatSum s) = s := by
-  sorry
+  cases s with
+  | inl s' =>
+    simp[swapNatBoolSum]
+    simp[swapBoolNatSum]
+  | inr s' =>
+    simp[swapNatBoolSum]
+    simp[swapBoolNatSum]
 
 end Type_isomorphisms
 
@@ -864,10 +897,12 @@ Hint: use the modulus operator: `%`.
 -/
 
 def nextEven (n : Nat): Nat ⊕ Unit :=
-  sorry
+  if (n%2 = 0)
+  then .inl (n+2)
+  else .inr ()
 
-example : nextEven 4 = .inl 6  := by sorry
-example : nextEven 5 = .inr () := by sorry
+example : nextEven 4 = .inl 6  := by rfl
+example : nextEven 5 = .inr () := by rfl
 
 /-
 We define a function that takes two partial functions and sums them.
@@ -882,9 +917,9 @@ def partial_sum (f g: Nat → Nat ⊕ Unit) (n : Nat) : Nat ⊕ Unit :=
     | .inl rg => .inl (rf + rg)
 
 
-example : (partial_sum partial_pred nextEven) 0 = .inr () := by sorry
-example : (partial_sum partial_pred nextEven) 1 = .inr () := by sorry
-example : (partial_sum partial_pred nextEven) 2 = .inl 5  := by sorry
+example : (partial_sum partial_pred nextEven) 0 = .inr () := by rfl
+example : (partial_sum partial_pred nextEven) 1 = .inr () := by rfl
+example : (partial_sum partial_pred nextEven) 2 = .inl 5  := by rfl
 
 /-
 Lean features a special type constructor `Option` to deal with partial functions.
@@ -920,19 +955,25 @@ example : getOrElseN 100 (partial_pred₂ 0) = 100 := by rfl
 It returns `none` instead of truncating to zero when `b > a`. -/
 
 def partial_sub (a b : Nat) : Option Nat :=
-  sorry
+  if b<=a
+  then some (a-b)
+  else none
 
-example : partial_sub 10 3 = some 7 := by sorry
-example : partial_sub 3 10 = none   := by sorry
+example : partial_sub 10 3 = some 7 := by rfl
+example : partial_sub 3 10 = none   := by rfl
 
 /- __Exercise (difficulty: 1/4)__ Add two optional numbers only when both are present. -/
 
 def partial_sum₂ (f g: Nat → Option Nat) (n : Nat) : Option Nat :=
-  sorry
+  match (f n) with
+  | none => none
+  | some n1 => match g n with
+    |none => none
+    | some n2 => n1+n2
 
-example : (partial_sum₂ partial_pred₂ (partial_sub 10)) 0  = none   := by sorry
-example : (partial_sum₂ partial_pred₂ (partial_sub 10)) 11 = none   := by sorry
-example : (partial_sum₂ partial_pred₂ (partial_sub 10)) 2  = some 9 := by sorry
+example : (partial_sum₂ partial_pred₂ (partial_sub 10)) 0  = none   := by rfl
+example : (partial_sum₂ partial_pred₂ (partial_sub 10)) 11 = none   := by rfl
+example : (partial_sum₂ partial_pred₂ (partial_sub 10)) 2  = some 9 := by rfl
 
 
 /-
@@ -978,23 +1019,30 @@ a function `g` that behaves as `f` on the input values that satisfy `p`, and is 
 -/
 
 def restrict (f : Nat → Nat) (p : Nat → Bool) : (Nat → Option Nat) :=
-  sorry
+  fun x => if p x then f x else none
 
 def f1_res := restrict Nat.succ (fun x => x>0)
-example : f1_res 1 = some 2 := by sorry
-example : f1_res 0 = none   := by sorry
+example : f1_res 1 = some 2 := by rfl
+example : f1_res 0 = none   := by rfl
 
 /- Prove that `restrict f p n` is undefined whenever `p n` is false. -/
 
 theorem restrict_none (f : Nat → Nat) (p : Nat → Bool) :
   ∀ n : Nat, p n = false → restrict f p n = none := by
-  sorry
+  intro n
+  intro h
+  simp[restrict]
+  exact h
 
 /- Prove that `restrict f p n` is defined whenever `p n` is true. -/
 
 theorem restrict_some (f : Nat → Nat) (p : Nat → Bool) :
   ∀ n : Nat, p n = true → exists v : Nat, restrict f p n = some v := by
-  sorry
+  intro n
+  intro h
+  exists f n
+  simp[restrict]
+  exact h
 
 end Domain_restriction
 
@@ -1010,17 +1058,48 @@ section Max_option
 /- __Exercise (difficulty: 1/4)__ Define partial maximum. -/
 
 def max_option (o1 o2: Option Nat) : Option Nat :=
-  sorry
+  match o1, o2 with
+  | some o1', none => o1'
+  | none, some o2' => o2'
+  | some o1', some o2' => if o1'>=o2' then o1' else o2'
+  | _, _ => none
 
-example : max_option (some 3) (some 5) = some 5 := by sorry
-example : max_option (some 3) none = some 3     := by sorry
-example : max_option none (some 5) = some 5     := by sorry
+example : max_option (some 3) (some 5) = some 5 := by rfl
+example : max_option (some 3) none = some 3     := by rfl
+example : max_option none (some 5) = some 5     := by rfl
 
 
 /- __Exercise (difficulty: 3/4)__ Prove that partial maximum is undefined whenever both inputs are none. -/
 
 theorem max_option_none (o1 o2: Option Nat) : max_option o1 o2 = none ↔ o1 = none ∧ o2 = none := by
-  sorry
+  -- Divide la doppia implicazione in due obiettivi distinti
+  constructor
+  · intro h
+    cases o1 with
+    | none =>
+      cases o2 with
+      | none =>
+        simp
+      | some b =>
+        simp [max_option] at h
+    | some a =>
+      cases o2 with
+      | none =>
+        simp [max_option] at h
+      | some b =>
+        by_cases hab : b ≤ a
+        · simp [max_option, hab] at h
+        · simp [max_option, hab] at h
+  · intro h
+    cases o1 with
+    | none =>
+      cases o2 with
+      | none =>
+        rfl
+      | some b =>
+        simp at h
+    | some a =>
+      simp at h
 
 /-
 __Exercise (difficulty: 3/4)__ Prove the following property of the partial maximum.
@@ -1030,7 +1109,17 @@ Follow the skeleton of the proof, inspecting the InfoView, and resolve the sorri
 theorem max_option_preserves_lower_bound
     (a lower : Nat) (b : Option Nat) (ha : lower ≤ a) :
     ∃ c, max_option (some a) b = some c ∧ lower ≤ c := by
-  sorry
+  cases b with
+  | none =>
+    simp[max_option]
+    exact ha
+  | some b' =>
+    simp[max_option]
+    by_cases h : b'<=a
+    simp[h]
+    exact ha
+    simp[h]
+    omega
 
 end Max_option
 
@@ -1064,11 +1153,26 @@ Evaluation is a partial function. It is undefined in the following cases:
 -/
 
 def eval (e : Aexp) : Option Nat :=
-  sorry
+  match e with
+  | Aexp.val n => some n
+  | Aexp.add (n1, n2) => match eval n1, eval n2 with
+    | some a, some b => some (a+b)
+    | _, _ => none
+  | Aexp.sub (n1, n2) => match eval n1, eval n2 with
+    | some a, some b => if b<=a then some (a-b) else none
+    | _, _ => none
+  | Aexp.mul (n1, n2) => match eval n1, eval n2 with
+    | some a, some b => some (a*b)
+    | _, _ => none
+  | Aexp.div (n1, n2) => match eval n1, eval n2 with
+    | some a, some b => if b≠0 then some (a/b) else none
+    | _, _ => none
 
-example : eval (Aexp.add (Aexp.val 1, Aexp.val 2)) = some 3                      := by sorry
-example : eval (Aexp.add (Aexp.val 1, Aexp.sub (Aexp.val 2, Aexp.val 3))) = none := by sorry
-example : eval (Aexp.mul (Aexp.val 1, Aexp.div (Aexp.val 2, Aexp.val 0))) = none := by sorry
+
+
+example : eval (Aexp.add (Aexp.val 1, Aexp.val 2)) = some 3                      := by rfl
+example : eval (Aexp.add (Aexp.val 1, Aexp.sub (Aexp.val 2, Aexp.val 3))) = none := by rfl
+example : eval (Aexp.mul (Aexp.val 1, Aexp.div (Aexp.val 2, Aexp.val 0))) = none := by rfl
 
 
 /-
@@ -1087,27 +1191,42 @@ theorem eval_add_success
     (h1 : eval e1 = some n1)
     (h2 : eval e2 = some n2) :
     eval (.add (e1, e2)) = some (n1 + n2) := by
-  sorry
+  simp[eval]
+  rw[h1]
+  rw[h2]
 
 theorem eval_add_error_left
     (e1 e2 : Aexp)
     (h : eval e1 = none) :
     eval (.add (e1, e2)) = none := by
-  sorry
+  simp[eval]
+  rw[h]
 
 theorem eval_add_error_right
     (e1 e2 : Aexp)
     (h : eval e2 = none) :
     eval (.add (e1, e2)) = none := by
-  sorry
+  simp[eval]
+  rw[h]
+  simp
 
 theorem eval_add_zero_right (e : Aexp) :
     eval (.add (e, .val 0)) = eval e := by
-  sorry
+  simp[eval]
+  cases eval e with
+  | none => rfl
+  | some a => rfl
 
 theorem eval_add_commutative (e1 e2 : Aexp) :
     eval (.add (e1, e2)) = eval (.add (e2, e1)) := by
-  sorry
+  simp[eval]
+  cases eval e1 with
+  | none => simp
+  | some a => cases eval e2 with
+    | none => simp
+    | some b =>
+      simp
+      rw[Nat.add_comm]
 
 theorem eval_add_characterization
     (e1 e2 : Aexp) (n : Nat) :
@@ -1116,11 +1235,38 @@ theorem eval_add_characterization
         eval e1 = some n1 ∧
         eval e2 = some n2 ∧
         n = n1 + n2 := by
-  sorry
+  constructor
+  intro h
+  simp[eval] at h
+  cases h1 : eval e1 with
+  | none => simp[h1] at h
+  | some a => cases h2 : eval e2 with
+    | none => simp[h2] at h
+    | some b =>
+      simp[h1, h2] at h
+      simp
+      rw[eq_comm]
+      exact h
+  intro h
+  -- Estrae valori e ipotesi dall'enunciato con il q. esistenziale
+  rcases h with ⟨n1, n2, h1, h2, h3⟩
+  simp[eval]
+  rw[h1, h2, h3]
 
 theorem eval_add_associative (e1 e2 e3 : Aexp) :
     eval (.add ((.add (e1, e2)), e3)) = eval (.add (e1, (.add (e2,e3)))) := by
-  sorry
+  simp[eval]
+  cases eval e1 with
+  | none => rfl
+  | some a => cases eval e2 with
+    | none => rfl
+    | some b =>
+      simp
+      match eval e3 with
+      | none => rfl
+      | some c =>
+        simp
+        rw[Nat.add_assoc]
 
 end Arithmetic_expressions
 
@@ -1143,15 +1289,19 @@ __Exercise (difficulty: 1/4)__ Define a function that returns the sum of the wri
 -/
 
 def total_score (g : Grade) : Option Nat :=
-  sorry
+  match g.oral with
+  | none => none
+  | some a => match g.written with
+    | none => none
+    | some b => some (a + b)
 
 def mario : Grade := { name := "Mario", written := some 18, oral := some 15 }
 def luigi : Grade := { name := "Luigi", written := some 15, oral := none }
 def alice : Grade := { name := "Alice", written := some 28, oral := some 30 }
 
-example : total_score mario = some 33 := by sorry
-example : total_score luigi = none    := by sorry
-example : total_score alice = some 58 := by sorry
+example : total_score mario = some 33 := by rfl
+example : total_score luigi = none    := by rfl
+example : total_score alice = some 58 := by rfl
 
 /-
 __Exercise (difficulty: 1/4)__ Prove that `total_score` does not depend on the student's name.
@@ -1159,7 +1309,7 @@ __Exercise (difficulty: 1/4)__ Prove that `total_score` does not depend on the s
 
 example (g : Grade) (newName : String) :
     total_score { g with name := newName } = total_score g := by
-  sorry
+  rfl
 
 /-
 __Exercise (difficulty: 3/4)__ Study the following characterization of `total_score`.
@@ -1172,18 +1322,46 @@ theorem total_score_characterization (g : Grade) (score : Nat) :
         g.written = some w ∧
         g.oral = some o ∧
         score = w + o := by
-  sorry
+  constructor
+  intro h
+  simp[total_score] at h
+  cases h1 : g.oral with
+  | none =>
+    rw[h1] at h
+    simp at h
+  | some a =>
+    rw[h1] at h
+    simp at h
+    cases h2: g.written with
+    | none =>
+      rw[h2] at h
+      simp at h
+    | some b =>
+      rw[h2] at h
+      simp at h
+      simp
+      omega
+  intro h
+  rcases h with ⟨n1, n2, h1, h2, h3⟩
+  simp[total_score]
+  rw[h1, h2, h3]
+  simp
+  omega
 
 /-
 __Exercise (difficulty: 1/4)__ Define a function that returns true if both grades are at least 18, and false otherwise.
 -/
 
 def passed (g : Grade) : Bool :=
-  sorry
+  match g.oral with
+  | none => false
+  | some o => match g.written with
+    | none => false
+    | some w => o>=18 && w>=18
 
-example : passed mario = false := by sorry
-example : passed luigi = false := by sorry
-example : passed alice = true  := by sorry
+example : passed mario = false := by rfl
+example : passed luigi = false := by rfl
+example : passed alice = true  := by rfl
 
 example (g : Grade) (newName : String) :
     passed { g with name := newName } = passed g := by
@@ -1200,7 +1378,27 @@ theorem passed_implies_minimum_total (g : Grade) :
     passed g = true →
       ∃ score : Nat,
         total_score g = some score ∧ score ≥ 36 := by
-  sorry
+  intro h
+  simp[passed] at h
+  cases h1 : g.oral with
+  | none =>
+    rw[h1] at h
+    simp at h
+  | some o =>
+    rw[h1] at h
+    simp at h
+    cases h2 : g.written with
+    | none =>
+      rw[h2] at h
+      simp at h
+    | some w =>
+      rw[h2] at h
+      simp at h
+      simp[total_score]
+      rcases h with ⟨h3, h4⟩
+      rw[h1, h2]
+      simp
+      omega
 
 /-
 __Exercise (difficulty: 2/4)__ Define a function that, given two results of the same student,
@@ -1211,15 +1409,17 @@ Hint: use `max_option`
 -/
 
 def max_grade (g1 g2: Grade) : Option Grade :=
-  sorry
+  if g1.name=g2.name
+  then some {g1 with oral := (max_option g1.oral g2.oral), written := (max_option g1.written g2.written)}
+  else none
 
-example : max_grade mario luigi = none := by sorry
+example : max_grade mario luigi = none := by rfl
 
 def luigi2 : Grade := { name := "Luigi", written := some 12, oral := some 17 }
 def alice2 : Grade := { name := "Alice", written := some 30, oral := none }
 
-example : max_grade luigi luigi2 = some { name := "Luigi", written := some 15, oral := some 17 } := by sorry
-example : max_grade alice alice2 = some { name := "Alice", written := some 30, oral := some 30 } := by sorry
+example : max_grade luigi luigi2 = some { name := "Luigi", written := some 15, oral := some 17 } := by rfl
+example : max_grade alice alice2 = some { name := "Alice", written := some 30, oral := some 30 } := by rfl
 
 /-
 __Exercise (difficulty: 3/4)__ Study the following property of `max_grade`.
@@ -1230,6 +1430,29 @@ Is the converse implication true? If not, prove it.
 
 theorem max_grade_passed (g1 g2 g12: Grade) (h: max_grade g1 g2 = some g12) : passed g1 = true → passed g12 = true := by
   sorry
+
+  /-
+  intro h1
+  simp[max_grade] at h
+  simp[passed] at h1
+  cases h2 : g1.oral with
+  | none =>
+    simp[h2] at h1
+  | some o =>
+    simp[h2] at h1
+    cases h3 : g1.written with
+    | none =>
+      simp[h3] at h1
+    | some w =>
+      simp[h3] at h1
+      simp[passed]
+      rcases h with ⟨i1, i2⟩
+      rw[<-i2]
+      simp [max_option, h2, h3]
+  -/
+
+-- CONTROLLARE
+
 
 end Students_grades
 
