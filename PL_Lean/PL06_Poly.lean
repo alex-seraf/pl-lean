@@ -134,13 +134,16 @@ Next, decide which of the three commented-out lines Lean would reject, and
 *why*.  Remove the comment marker to test your guess.
 -/
 
+-- Tipo: Nat
 #check identityExplicit Nat 5
+-- Tipo: Bool -> Bool
 #check identityExplicit Bool
+-- Tipo: List Nat -> List Nat
 #check identityExplicit (List Nat)
 
--- #check identityExplicit Nat true
--- #check identityExplicit Bool true
--- #check identityExplicit 5 Nat
+-- #check identityExplicit Nat true (true non è di tipo Nat)
+#check identityExplicit Bool true
+-- #check identityExplicit 5 Nat (il primo parametro deve essere un tipo)
 
 
 /- __Exercise (difficulty: 1/4)__ Define a function that, given a value `x` of
@@ -149,10 +152,10 @@ The type parameter is explicit for the moment.
 -/
 
 def duplicateExplicit (A : Type) (x : A) : A × A :=
-  sorry
+  (x,x)
 
-example : duplicateExplicit Nat 4 = (4, 4) := by sorry
-example : duplicateExplicit Bool false = (false, false) := by sorry
+example : duplicateExplicit Nat 4 = (4, 4) := by rfl
+example : duplicateExplicit Bool false = (false, false) := by rfl
 
 end Motivation
 
@@ -225,10 +228,10 @@ Below, `emptyList` has an implicit parameter but *no* value parameter.
 How can Lean possibly find `A`?
 -/
 
--- #check identityImplicit 5
--- #check identityImplicit Nat 5
--- #check @identityImplicit Nat 5
--- #check @identityImplicit 5
+#check identityImplicit 5
+-- #check identityImplicit Nat 5 (manca l'operatore @)
+#check @identityImplicit Nat 5
+-- #check @identityImplicit 5 (manca il tipo Nat)
 
 def emptyList {A : Type} : List A :=
   []
@@ -243,10 +246,10 @@ def emptyList {A : Type} : List A :=
 type parameter. -/
 
 def duplicate {A : Type} (x : A) : A × A :=
-  sorry
+  (x,x)
 
-example : duplicate 4 = (4, 4) := by sorry
-example : duplicate false = (false, false) := by sorry
+example : duplicate 4 = (4, 4) := by rfl
+example : duplicate false = (false, false) := by rfl
 
 
 /-
@@ -278,11 +281,11 @@ the elaborator (`identityImplicit 5`).
 __Checkpoint 3__  Predict which of the following types are legit.
 -/
 
--- #check @duplicate Nat 4
--- #check @duplicate 4
--- #check duplicate 4
--- #check (duplicate 4).1 + 1
--- #check (duplicate 4) + 1
+#check @duplicate Nat 4
+-- #check @duplicate 4 ERRORE di tipo
+#check duplicate 4
+#check (duplicate 4).1 + 1
+-- #check (duplicate 4) + 1 ERRORE di tipo
 
 
 end Implicit_parameters
@@ -401,9 +404,9 @@ why the signature has three type parameters. -/
 
 def replaceFirst {A : Type} {B : Type} {C : Type w}
     (newFirst : C) (p : A × B) : C × B :=
-  sorry
+  (newFirst, p.2)
 
-example : replaceFirst false (3, "hello") = (false, "hello") := by sorry
+example : replaceFirst false (3, "hello") = (false, "hello") := by rfl
 
 
 /-
@@ -431,10 +434,12 @@ an element of type `A`, apply `f` to obtain a `B`.  Preserve `none`. -/
 
 def mapOptionP {A : Type} {B : Type}
     (f : A → B) (o : Option A) : Option B :=
-  sorry
+  match o with
+  | none => none
+  | some x => some (f x)
 
-example : mapOptionP Nat.succ (some 4) = some 5 := by sorry
-example : mapOptionP Nat.succ none = none := by sorry
+example : mapOptionP Nat.succ (some 4) = some 5 := by rfl
+example : mapOptionP Nat.succ none = none := by rfl
 
 
 /- __Exercise (difficulty: 1/4)__ Prove that swapping a polymorphic pair twice
@@ -442,7 +447,7 @@ returns the original pair. -/
 
 theorem swapP_twice {A : Type} {B : Type} (p : A × B) :
     swapP (swapP p) = p := by
-  sorry
+  simp[swapP]
 
 
 /- __Exercise (difficulty: 1/4)__ Prove that mapping the identity function over
@@ -452,7 +457,10 @@ an option leaves it unchanged. -/
 
 theorem mapOptionP_identity {A : Type} (o : Option A) :
     mapOptionP (fun x => x) o = o := by
-  sorry
+  simp[mapOptionP]
+  cases o
+  simp
+  simp
 
 
 /-
@@ -487,29 +495,29 @@ inhabitants that behave differently.  Define them.
 -/
 
 def pickFirst {A : Type} (x y : A) : A :=
-  sorry
+  x
 
 def pickSecond {A : Type} (x y : A) : A :=
-  sorry
+  y
 
-example : pickFirst 10 20 = 10      := by sorry
-example : pickSecond 10 20 = 20     := by sorry
-example : pickFirst "a" "b" = "a"   := by sorry
-example : pickSecond "a" "b" = "b"  := by sorry
+example : pickFirst 10 20 = 10      := by rfl
+example : pickSecond 10 20 = 20     := by rfl
+example : pickFirst "a" "b" = "a"   := by rfl
+example : pickSecond "a" "b" = "b"  := by rfl
 
 /-
 __Checkpoint 6__  Define (total, terminating) functions with the given types.
 -/
 
-example : {A : Type} → A → A          := sorry
+example : {A : Type} → A → A          := fun x => x
 
 -- Define two different functions with the given type
-example : {A : Type} → A → Option A   := sorry
-example : {A : Type} → A → Option A   := sorry
+example : {A : Type} → A → Option A   := fun _ => none
+example : {A : Type} → A → Option A   := fun x => some x
 
 -- Define two different functions with the given type
-example : {A : Type} → A → Bool       := sorry
-example : {A : Type} → A → Bool       := sorry
+example : {A : Type} → A → Bool       := fun _ => true
+example : {A : Type} → A → Bool       := fun _ => false
 
 /-
 Note how much the type alone tells us!  This phenomenon is called
@@ -591,13 +599,13 @@ The constructors of `List` are themselves polymorphic functions.  Predict
 the types of the following expressions, and which ones will be rejected.
 -/
 
--- #check [1,2,3]
--- #check [[1],[2],[3]]
+#check [1,2,3]
+#check [[1],[2],[3]]
 -- #check [[1],2,[3]]
--- #check [some 1,none,some 3]
+#check [some 1,none,some 3]
 -- #check [some 1,none,some false]
--- #check [Sum.inl 10, Sum.inr true, Sum.inl 20]
--- #check [Sum.inl 10, Sum.inr 20]
+#check [Sum.inl 10, Sum.inr true, Sum.inl 20]
+#check [Sum.inl 10, Sum.inr 20]
 -- #check [Sum.inl 10, Sum.inl true]
 
 
@@ -631,19 +639,24 @@ a function `List A → A` cannot exist.
 element of a list.  The tail of the empty list is again the empty list. -/
 
 def tailL {A : Type} (xs : List A) : List A :=
-  sorry
+  match xs with
+  | [] => []
+  | _ :: tl => tl
 
-example : tailL ([10, 20, 30] : List Nat) = [20, 30] := by sorry
-example : tailL ([] : List Nat) = [] := by sorry
+example : tailL ([10, 20, 30] : List Nat) = [20, 30] := by rfl
+example : tailL ([] : List Nat) = [] := by rfl
 
 
 /- __Exercise (difficulty: 1/4)__ Test whether a list is empty. -/
 
 def isEmptyL {A : Type} (xs : List A) : Bool :=
-  sorry
+  match xs with
+  | [] => true
+  | _ => false
 
-example : isEmptyL ([] : List Bool) = true  := by sorry
-example : isEmptyL [true, false] = false    := by sorry
+
+example : isEmptyL ([] : List Bool) = true  := by rfl
+example : isEmptyL [true, false] = false    := by rfl
 
 /-
 __Exercise (difficulty: 2/4)__ Prove that a list `l` is empty if and only if
@@ -652,14 +665,33 @@ __Exercise (difficulty: 2/4)__ Prove that a list `l` is empty if and only if
 
 theorem empty_no_head (A : Type) (l : List A) :
   isEmptyL l = true ↔ headOptionL l = none := by
-  sorry
+  constructor
+  .
+    intro h1
+    cases l with
+    | nil =>
+      rfl
+    | cons e tl =>
+      cases h1
+  .
+    intro h1
+    cases l with
+    | nil =>
+      rfl
+    | cons e tl =>
+      cases h1
+
 
 
 /- __Exercise__ Formalize and prove a theorem stating that the tail of a list `l` is
   empty whenever `l` is empty (use the functions `isEmptyL` and `tailL` given before).
 -/
 
---- theorem nonempty_has_tail ...
+theorem nonempty_has_tail (A: Type) (l : List A) : isEmptyL l = true -> isEmptyL (tailL l) = true := by
+  intro h1
+  cases l with
+  | nil => rfl
+  | cons e tl => cases h1
 
 end Pattern_matching_on_lists
 
@@ -697,9 +729,10 @@ This functions is *not* polymorphic because the addition operation is specific t
 -/
 
 def sumL : List Nat → Nat
-  := sorry
+  | [] => 0
+  | e::tl => e + sumL tl
 
-example : sumL [2, 3, 4] = 9 := by sorry
+example : sumL [2, 3, 4] = 9 := by rfl
 
 /-
 The next function joins two lists.  It recursively traverses the first list
@@ -720,39 +753,44 @@ Write each step in a comment, unfolding exactly one equation of `appendL` at a t
 and say which equation you used and which values are used for the variables x, xs and ys.
 
     appendL (1 :: 2 :: []) (3 :: [])
-  = 1 :: appendL (2 :: []) (3 :: [])     -- eqn 2, with x = 1, xs = [2], ys = [3]
-  = ...
+  = 1 :: appendL (2 :: []) (3 :: [])      -- eqn 2, with x = 1, xs = [2], ys = [3]
+  = 1 :: 2 :: appendL ([]) (3 :: [])      -- eqn 2, with x = 2, xs = [ ], ys = [3]
+  = 1 :: 2 :: 3 :: []                     -- eqn 1, with ys = [3]
 -/
 
 
 /- __Exercise (difficulty: 1/4)__ Define `replicateL n x`, which constructs a
 list containing `n` copies of `x`. -/
 
-def replicateL {A : Type} : Nat → A → List A
-  := sorry
+def replicateL {A : Type} : Nat → A → List A :=
+  fun n x => match n with
+  | 0 => []
+  | n'+1 => x :: (replicateL n' x)
 
-example : replicateL 4 true = [true, true, true, true] := by sorry
-example : replicateL 0 "Ciao" = [] := by sorry
+example : replicateL 4 true = [true, true, true, true] := by rfl
+example : replicateL 0 "Ciao" = [] := by rfl
 
 
 /- __Exercise (difficulty: 2/4)__ Return the last element of a list, if one
 exists.  Notice that the recursive call is made on the non-empty tail. -/
 
 def lastOptionL {A : Type u} : List A → Option A
-  := sorry
+  | [] => none
+  | le :: [] => some le
+  | _::tl => lastOptionL tl
 
-example : lastOptionL ([10, 20, 30] : List Nat) = some 30 := by sorry
-example : lastOptionL ([] : List Nat) = none := by sorry
+example : lastOptionL ([10, 20, 30] : List Nat) = some 30 := by rfl
+example : lastOptionL ([] : List Nat) = none := by rfl
 
 
 /-
 __Checkpoint 9__  Define functions with the given types, whenever they exists.
 -/
 
-example : {A : Type} → List A → List A := sorry
-example : {A B : Type} → List A → List B := sorry
-example : {A : Type} → List A → Nat := sorry
-example : {A : Type} → List A → A := sorry
+example : {A : Type} → List A → List A := fun l => l
+example : {A B : Type} → List A → List B := fun _ => []
+example : {A : Type} → List A → Nat := fun l => lengthL l
+example : {A : Type} → List A → A := fun l => sorry -- NON ESISTE
 
 end Recursive_list_functions
 
@@ -788,7 +826,7 @@ The function may change the type of the elements.  For example:
 example : mapL (fun n => if n > 2 then true else false) [1, 2, 3] = [false, false, true] := by rfl
 
 /-
-We can obtain the same effect of the last `mapL` more succincrly using `decide`.
+We can obtain the same effect of the last `mapL` more succincerly using `decide`.
 -/
 
 example : mapL (fun n => decide (n > 2)) [1, 2, 3] = [false, false, true] := by rfl
@@ -797,8 +835,11 @@ example : mapL (fun n => decide (n > 2)) [1, 2, 3] = [false, false, true] := by 
 __Checkpoint 10__  Write down the types of these partial applications.
 -/
 
+-- List Nat -> List Nat
 #check mapL Nat.succ
+-- List Nat -> List Bool
 #check mapL (fun n : Nat => decide (n > 2))
+-- List Bool -> List Bool
 #check mapL (fun b : Bool => !b)
 
 
@@ -807,9 +848,10 @@ the elements for which the Boolean predicate `p` returns `true`. -/
 
 def filterL {A : Type u}
     (p : A → Bool) : List A → List A
-  := sorry
+  | [] => []
+  | e :: tl => if p e then e :: filterL p tl else filterL p tl
 
-example : filterL (fun n : Nat => decide (n > 2)) [1, 2, 3, 4] = [3, 4] := by sorry
+example : filterL (fun n : Nat => decide (n > 2)) [1, 2, 3, 4] = [3, 4] := by rfl
 
 
 /- __Exercise (difficulty: 1/4)__ Define `allL` and `anyL`.
@@ -821,25 +863,28 @@ Think carefully about the results for the empty list.
 -/
 
 def allL {A : Type u} (p : A → Bool) : List A → Bool
-  := sorry
+  | [] => true
+  | e :: tl => p e && allL p tl
 
 def anyL {A : Type u} (p : A → Bool) : List A → Bool
-  := sorry
+  | [] => false
+  | e :: tl => p e || anyL p tl
 
-example : allL (fun n : Nat => decide (n > 0)) [1, 2, 3] = true   := by sorry
-example : allL (fun n : Nat => decide (n > 0)) [1, 0, 3] = false  := by sorry
-example : allL (fun n : Nat => decide (n > 0)) [] = true          := by sorry
-example : anyL (fun n : Nat => decide (n > 5)) [1, 8, 3] = true   := by sorry
-example : anyL (fun n : Nat => decide (n > 5)) [1, 2, 3] = false  := by sorry
-example : anyL (fun n : Nat => decide (n > 5)) [] = false         := by sorry
+example : allL (fun n : Nat => decide (n > 0)) [1, 2, 3] = true   := by rfl
+example : allL (fun n : Nat => decide (n > 0)) [1, 0, 3] = false  := by rfl
+example : allL (fun n : Nat => decide (n > 0)) [] = true          := by rfl
+example : anyL (fun n : Nat => decide (n > 5)) [1, 8, 3] = true   := by rfl
+example : anyL (fun n : Nat => decide (n > 5)) [1, 2, 3] = false  := by rfl
+example : anyL (fun n : Nat => decide (n > 5)) [] = false         := by rfl
 
 
 /- __Exercise (difficulty: 1/4)__ Count the elements satisfying a predicate. -/
 
 def countIfL {A : Type u} (p : A → Bool) : List A → Nat
-  := sorry
+  | [] => 0
+  | e :: tl => if p e then 1 + (countIfL p tl) else countIfL p tl
 
-example : countIfL (fun n : Nat => decide (n > 2)) [1, 3, 2, 4, 5] = 3 := by sorry
+example : countIfL (fun n : Nat => decide (n > 2)) [1, 3, 2, 4, 5] = 3 := by rfl
 
 
 
@@ -957,9 +1002,10 @@ theorem appendL_nil_left {A : Type} (xs : List A) :
 /-
 __Checkpoint 12__  Predict whether the symmetrical theorem can be proved by `rfl`.
 Think before uncommenting:
+-/
 
 -- example {A : Type} (xs : List A) : appendL xs [] = xs := by rfl
--/
+
 
 /-
 We can prove `appendL_nil_right` by induction on the structure of the list.
@@ -978,7 +1024,12 @@ theorem appendL_nil_right {A : Type} (xs : List A) :
 
 theorem appendL_associative {A : Type} (xs ys zs : List A) :
     appendL (appendL xs ys) zs = appendL xs (appendL ys zs) := by
-  sorry
+  induction xs with
+  | nil =>
+    simp[appendL]
+  | cons x xs ih =>
+    simp[appendL]
+    rw[ih]
 
 
 /- __Exercise (difficulty: 2/4)__ Prove that the length of an append is the
@@ -986,7 +1037,15 @@ sum of the two lengths. -/
 
 theorem lengthL_appendL {A : Type} (xs ys : List A) :
     lengthL (appendL xs ys) = lengthL xs + lengthL ys := by
-  sorry
+  induction xs with
+  | nil =>
+    simp[appendL]
+    rfl
+  | cons x xs ih =>
+    simp[appendL]
+    simp[lengthL]
+    rw[ih]
+    omega
 
 
 end Induction_on_lists
@@ -1067,10 +1126,10 @@ has type `Nat`.
 -/
 
 def lengthFold {A : Type} (xs : List A) : Nat :=
-  sorry
+  foldRightL (fun (_ : A) (acc : Nat) => acc+1) 0 xs
 
-example : lengthFold ["a", "b", "c"] = 3  := by sorry
-example : lengthFold ([] : List Bool) = 0 := by sorry
+example : lengthFold ["a", "b", "c"] = 3  := by rfl
+example : lengthFold ([] : List Bool) = 0 := by rfl
 
 end Folding_lists
 
@@ -1153,9 +1212,9 @@ Two details are important in practice:
 
 /- __Checkpoint 15__ Predict the values of the following pipelines -/
 
-example : (3 |> squareN  |> squareN |> doubleN) = sorry := by sorry
-example : (10 |> Nat.sub 3) = sorry := by sorry
-example : (10 |> (fun x => Nat.sub x 3)) = sorry := by sorry
+example : (3 |> squareN  |> squareN |> doubleN) = 162 := by rfl
+example : (10 |> Nat.sub 3) = 0 := by rfl
+example : (10 |> (fun x => Nat.sub x 3)) = 7 := by rfl
 
 
 /-
@@ -1189,11 +1248,12 @@ sum of the squares of all the even elements of a list. Combine map, filter and f
 with the pipe operator.
 -/
 
-def sumSqEven (xs : List Nat) : Nat := sorry
+def sumSqEven (xs : List Nat) : Nat :=
+  xs |> filterL (fun x => x%2 = 0) |> mapL (fun x => squareN x) |> foldRightL (fun x acc => acc+x) 0
 
-example : sumSqEven [] = 0 := by sorry
-example : sumSqEven [1, 3, 5] = 0 := by sorry
-example : sumSqEven [1, 2, 3, 4, 5] = 20 := by sorry
+example : sumSqEven [] = 0 := by rfl
+example : sumSqEven [1, 3, 5] = 0 := by rfl
+example : sumSqEven [1, 2, 3, 4, 5] = 20 := by rfl
 
 
 end Pipe_operator
